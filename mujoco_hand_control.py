@@ -26,7 +26,7 @@ RF = [13, 14, 15, 16]
 LF = [17, 18, 19, 20]
 
 
-SMOOTH = 0.5
+SMOOTH = 0.15
 
 
 # ── geometry helpers ────────────────────────────────────────────────────────
@@ -41,7 +41,8 @@ def angle_at(a, b, c):
     return float(np.arccos(np.clip(np.dot(ba, bc) / denom, -1, 1)))
 
 def curl(angle):
-    return np.clip((np.pi - angle) / np.pi, 0, 1)
+    # 180° = 0 (straight), 90° = 1 (fully curled)
+    return np.clip((np.pi - angle) / (np.pi / 2), 0, 1)
 
 def finger_ctrls(landmarks, mcp_idx, pip_idx, dip_idx, tip_idx, prox_range, tendon_range):
     wrist = pt(landmarks, W)
