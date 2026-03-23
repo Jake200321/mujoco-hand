@@ -25,15 +25,6 @@ MF = [9, 10, 11, 12]
 RF = [13, 14, 15, 16]
 LF = [17, 18, 19, 20]
 
-# ── skeleton connections for drawing ───────────────────────────────────────
-CONNECTIONS = [
-    (0,1),(1,2),(2,3),(3,4),
-    (0,5),(5,6),(6,7),(7,8),
-    (0,9),(9,10),(10,11),(11,12),
-    (0,13),(13,14),(14,15),(15,16),
-    (0,17),(17,18),(18,19),(19,20),
-    (5,9),(9,13),(13,17),
-]
 
 SMOOTH = 0.5
 
@@ -136,9 +127,7 @@ def main():
                     break
 
                 frame = cv2.flip(frame, 1)
-                h, w  = frame.shape[:2]
-
-                rgb      = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                rgb   = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
                 result   = landmarker.detect(mp_image)
 
@@ -148,26 +137,10 @@ def main():
                     ctrl_smooth = SMOOTH * ctrl_smooth + (1 - SMOOTH) * new_ctrl
                     data.ctrl[:] = ctrl_smooth
 
-                    # draw skeleton on camera frame
-                    pts = [(int(lm.x * w), int(lm.y * h)) for lm in lms]
-                    for a, b in CONNECTIONS:
-                        cv2.line(frame, pts[a], pts[b], (0, 200, 255), 2)
-                    for p in pts:
-                        cv2.circle(frame, p, 4, (255, 255, 255), cv2.FILLED)
-
-                cv2.putText(frame, "Hand Control  |  Q = quit",
-                            (10, h - 10), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5, (200, 200, 200), 1)
-                cv2.imshow("Camera", frame)
-
                 mujoco.mj_step(model, data)
                 viewer.sync()
 
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
-
     cap.release()
-    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
