@@ -26,7 +26,7 @@ RF = [13, 14, 15, 16]
 LF = [17, 18, 19, 20]
 
 
-SMOOTH = 0.15
+SMOOTH = 0.05
 
 
 # ── geometry helpers ────────────────────────────────────────────────────────
@@ -90,6 +90,23 @@ def landmarks_to_ctrl(landmarks):
     ctrl[6] = curl(angle_at(t_mcp, t_ip,  t_tip)) * 1.5708
     spread  = angle_at(t_cmc, wrist, i_mcp)
     ctrl[2] = np.clip(spread - 0.8, -1.0472, 1.0472)
+
+    # ── wrist rotation ────────────────────────────────────────────────────
+    # Use the vector from wrist → middle MCP as the hand's orientation axis.
+    mid_mcp  = pt(landmarks, MF[0])
+    hand_vec = mid_mcp - wrist                        # (x, y, z) normalised coords
+    xy_len   = np.sqrt(hand_vec[0]**2 + hand_vec[1]**2) + 1e-8
+    mag      = np.linalg.norm(hand_vec) + 1e-8
+
+    # WRJ1 – radial/ulnar deviation (side tilt in image plane)
+    # hand_vec[0] < 0 → tilted toward thumb side, > 0 → pinky side
+    lateral  = hand_vec[0] / xy_len
+    ctrl[1]  = np.clip(lateral * 0.6, -0.698132, 0.488692)
+
+    # WRJ2 – flexion/extension (depth tilt via MediaPipe z)
+    # z is negative when landmark is closer to camera than the wrist
+    z_tilt   = hand_vec[2] / mag
+    ctrl[0]  = np.clip(z_tilt * 0.5, -0.523599, 0.174533)
 
     return ctrl
 
